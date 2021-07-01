@@ -1,5 +1,7 @@
 package cn.darkjrong;
 
+import java.util.Calendar;
+
 public class CronBuilderTest {
 
     public static void main(String[] args) {
@@ -83,8 +85,18 @@ public class CronBuilderTest {
         System.out.println(a8);
 
 
+        System.out.println("-------------------------------------------------------");
 
-
+        String a9 = CronBuilder.builder()
+                .seconds(-1)
+                .minutes(-1)
+                .hours(-1)
+                .dayOfMonth(-1)
+                .month(-1)
+                .dayOfWeek(-1)
+                .year(-1)
+                .build();
+        System.out.println("a9 : " + a9);
 
 
 

@@ -1,5 +1,6 @@
 package cn.darkjrong;
 
+import java.util.Calendar;
 import java.util.StringJoiner;
 
 /**
@@ -151,11 +152,7 @@ public class CronBuilder {
      * @return 返回当前对象
      */
     public CronBuilder seconds(Integer... seconds) {
-        if (seconds == null || seconds.length <= 0) {
-            seconds = new Integer[1];
-            seconds[0] = 0;
-        }
-
+        setTime(0, seconds);
         StringJoiner stringJoiner = new StringJoiner(COMMA);
         for (Integer second : seconds) {
             if (second > 59)  second = 59;
@@ -213,10 +210,7 @@ public class CronBuilder {
      * @return 返回当前对象
      */
     public CronBuilder minutes(Integer... minutesArr) {
-        if (minutesArr == null || minutesArr.length <= 0) {
-            minutesArr = new Integer[1];
-            minutesArr[0] = 0;
-        }
+        setTime(0, minutesArr);
         StringJoiner stringJoiner = new StringJoiner(COMMA);
         for (Integer minutes : minutesArr) {
             if (minutes > 59)  minutes = 59;
@@ -275,10 +269,7 @@ public class CronBuilder {
      * @return 返回当前对象
      */
     public CronBuilder hours(Integer... hoursArr) {
-        if (hoursArr == null || hoursArr.length <= 0) {
-            hoursArr = new Integer[1];
-            hoursArr[0] = 0;
-        }
+        setTime(0, hoursArr);
         StringJoiner stringJoiner = new StringJoiner(COMMA);
         for (Integer hours : hoursArr) {
             if (hours > 23)  hours = 23;
@@ -343,11 +334,7 @@ public class CronBuilder {
      * @return 返回当前对象
      */
     public CronBuilder dayOfMonth(Integer... days) {
-        if (days == null || days.length <= 0) {
-            days = new Integer[1];
-            days[0] = 0;
-        }
-
+        setTime(1, days);
         StringJoiner stringJoiner = new StringJoiner(COMMA);
         for (Integer day : days) {
             if (day > 31)  day = 31;
@@ -457,11 +444,7 @@ public class CronBuilder {
      * @return 返回当前对象
      */
     public CronBuilder month(Integer... months) {
-        if (months == null || months.length <= 0) {
-            months = new Integer[1];
-            months[0] = 1;
-        }
-
+        setTime(1, months);
         StringJoiner stringJoiner = new StringJoiner(COMMA);
         for (Integer month : months) {
             if (month > 12)  month = 12;
@@ -528,11 +511,7 @@ public class CronBuilder {
      * @return 返回当前对象
      */
     public CronBuilder dayOfWeek(Integer... dayOfWeeks) {
-        if (dayOfWeeks == null || dayOfWeeks.length <= 0) {
-            dayOfWeeks = new Integer[1];
-            dayOfWeeks[0] = 1;
-        }
-
+        setTime(1, dayOfWeeks);
         StringJoiner stringJoiner = new StringJoiner(COMMA);
         for (Integer dayOfWeek : dayOfWeeks) {
             if (dayOfWeek > 7)  dayOfWeek = 7;
@@ -621,14 +600,13 @@ public class CronBuilder {
      * @return 返回当前对象
      */
     public CronBuilder year(int year) {
-
         if (isBlank(this.seconds)) seconds(0);
         if (isBlank(this.minutes)) minutes(0);
         if (isBlank(this.hours)) hours(0);
         if (isBlank(this.month)) month(1);
         if (isBlank(this.dayofMonth)) dayOfMonth(1);
 
-        this.year = year + EMPTY;
+        this.year = year < getCurrentYear() ? ASTERISK : year + EMPTY;
         return this;
     }
 
@@ -642,6 +620,8 @@ public class CronBuilder {
     public CronBuilder year(int start, int end) {
 
         if (start > end) start = end;
+        if (start < getCurrentYear()) start = getCurrentYear();
+        if (end < getCurrentYear()) end = getCurrentYear();
 
         if (isBlank(this.seconds)) seconds(0);
         if (isBlank(this.minutes)) minutes(0);
@@ -692,7 +672,26 @@ public class CronBuilder {
         return !obj1.equals(obj2);
     }
 
+    /**
+     * 设置时间
+     * @param index0Value 索引0位置的值
+     * @param time 时间
+     */
+    private static void setTime(Integer index0Value, Integer... time) {
+        if (time == null || time.length <= 0) {
+            time = new Integer[1];
+            time[0] = index0Value;
+        }
+    }
 
+    /**
+     * 获取当前年
+     * @return  当前年份
+     */
+    private static int getCurrentYear() {
+        Calendar cal = Calendar.getInstance();
+        return cal.get(Calendar.YEAR);
+    }
 
 
 
