@@ -1,4 +1,6 @@
-package cn.darkjrong;
+package cn.darkjrong.cron;
+
+import org.quartz.CronExpression;
 
 import java.util.Calendar;
 import java.util.StringJoiner;
@@ -133,6 +135,9 @@ public class CronBuilder {
         joiner.add(seconds).add(minutes).add(hours).add(dayofMonth).add(month).add(dayofWeek).add(year);
 
         String cron = joiner.toString();
+
+        assert CronExpression.isValidExpression(cron);
+
         joiner = null;
         return cron;
     }
