@@ -1,4 +1,4 @@
-package cn.darkjrong.cron;
+package com.github.darkjrong.cron;
 
 import org.quartz.CronExpression;
 
