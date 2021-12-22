@@ -4,6 +4,8 @@ import org.quartz.CronExpression;
 
 import java.util.Calendar;
 import java.util.StringJoiner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * cron 表达式构建器
@@ -125,7 +127,21 @@ public class CronBuilder {
             }
 
             if (notEquals(QUESTION_MARK, this.dayofMonth) && notEquals(QUESTION_MARK, this.dayofWeek)) {
-                this.dayofWeek = QUESTION_MARK;
+                if (equals(ASTERISK, this.dayofMonth)
+                        && notEquals(QUESTION_MARK, this.dayofWeek) && notEquals(ASTERISK, this.dayofWeek)) {
+                    this.dayofMonth = QUESTION_MARK;
+                }else if (equals(ASTERISK, this.dayofWeek)
+                        && notEquals(QUESTION_MARK, this.dayofMonth) && notEquals(ASTERISK, this.dayofMonth)) {
+                    this.dayofWeek = QUESTION_MARK;
+                }else if (notEquals(QUESTION_MARK, this.dayofWeek)
+                        && notEquals(ASTERISK, this.dayofWeek) && isNumeric(this.dayofMonth)) {
+                    this.dayofMonth = QUESTION_MARK;
+                }else if (notEquals(QUESTION_MARK, this.dayofMonth)
+                        && notEquals(ASTERISK, this.dayofMonth) && isNumeric(this.dayofWeek)) {
+                    this.dayofWeek = QUESTION_MARK;
+                }else {
+                    this.dayofWeek = QUESTION_MARK;
+                }
             }
 
         }else if (isBlank(this.dayofWeek) && isBlank(this.dayofMonth)) {
@@ -698,6 +714,17 @@ public class CronBuilder {
         return cal.get(Calendar.YEAR);
     }
 
+    /**
+     * 是数字
+     *
+     * @param str str
+     * @return boolean
+     */
+    private static boolean isNumeric(String str){
+        Pattern pattern = Pattern.compile("[0-9]*");
+        Matcher isNum = pattern.matcher(str);
+        return !isNum.matches() ? Boolean.FALSE : Boolean.TRUE;
+    }
 
 
 

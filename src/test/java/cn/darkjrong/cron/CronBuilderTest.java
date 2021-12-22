@@ -1,5 +1,7 @@
 package cn.darkjrong.cron;
 
+import org.junit.jupiter.api.Test;
+
 public class CronBuilderTest {
 
     public static void main(String[] args) {
@@ -129,6 +131,28 @@ public class CronBuilderTest {
 
 
 
+
+    }
+
+    @Test
+    public void dayOfWeek() {
+
+//        System.out.println(CronBuilder.builder().dayOfMonth().dayOfWeek(1,4, false).build());
+
+
+//        String a2 = CronBuilder.builder().minutes(12).dayOfMonth().dayOfWeek(4).build();
+//        System.out.println(a2);
+
+        String a3 = CronBuilder.builder().minutes(12).dayOfMonth().dayOfWeek(4).build();
+        System.out.println(a3);
+
+    }
+
+    @Test
+    public void dayOfMonth() {
+
+        String a3 = CronBuilder.builder().minutes(12).dayOfMonth(1,2).dayOfWeek(1,3).build();
+        System.out.println(a3);
 
     }
 
