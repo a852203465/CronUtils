@@ -98,40 +98,6 @@ public class CronBuilderTest {
                 .build();
         System.out.println("a9 : " + a9);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
     @Test
