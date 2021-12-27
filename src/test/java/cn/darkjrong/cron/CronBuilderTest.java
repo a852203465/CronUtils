@@ -120,6 +120,11 @@ public class CronBuilderTest {
         String a3 = CronBuilder.builder().minutes(12).dayOfMonth(1,2).dayOfWeek(1,3).build();
         System.out.println(a3);
 
+        System.out.println(CronBuilder.builder().dayOfMonth(1, 2).build());
+
+        System.out.println(CronBuilder.builder().dayOfMonth(2, 4, true).build());
+
+
     }
 
 
