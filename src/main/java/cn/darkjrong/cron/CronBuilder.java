@@ -1,7 +1,5 @@
 package cn.darkjrong.cron;
 
-import org.quartz.CronExpression;
-
 import java.util.Calendar;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
