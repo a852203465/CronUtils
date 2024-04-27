@@ -4,43 +4,51 @@ import org.junit.jupiter.api.Test;
 
 public class CronBuilderTest {
 
-    public static void main(String[] args) {
-
+    @Test
+    void perSecond() {
         String perSecond = CronBuilder.builder().seconds().build();
         System.out.println("perSecond :" + perSecond);
+    }
 
-        System.out.println("-------------------------------------------------------");
-
+    @Test
+    void perMinutes() {
         String perMinutes = CronBuilder.builder().minutes().build();
         System.out.println("perMinutes :" + perMinutes);
 
-        System.out.println("-------------------------------------------------------");
+    }
 
+    @Test
+    void perHours() {
         String perHours = CronBuilder.builder().hours().build();
         System.out.println("perHours :" +perHours);
+    }
 
-        System.out.println("-------------------------------------------------------");
-
+    @Test
+    void perDayOfMonth() {
         String perDayOfMonth = CronBuilder.builder().dayOfMonth().build();
         System.out.println("perDayOfMonth :" +perDayOfMonth);
+    }
 
-        System.out.println("-------------------------------------------------------");
-
+    @Test
+    void perMonth() {
         String perMonth = CronBuilder.builder().month().build();
         System.out.println("perMonth :" +perMonth);
+    }
 
-        System.out.println("-------------------------------------------------------");
-
+    @Test
+    void perDayOfWeek() {
         String perDayOfWeek = CronBuilder.builder().dayOfWeek().build();
         System.out.println("perDayOfWeek :" +perDayOfWeek);
+    }
 
-        System.out.println("-------------------------------------------------------");
-
+    @Test
+    void perYear() {
         String perYear = CronBuilder.builder().year().build();
         System.out.println("perYear :" +perYear);
+    }
 
-        System.out.println("-------------------------------------------------------");
-
+    @Test
+    void test1() {
         String a1 = CronBuilder.builder().hours(2).dayOfMonth(1).build();
         System.out.println(a1);
 
@@ -97,7 +105,6 @@ public class CronBuilderTest {
                 .year(-1)
                 .build();
         System.out.println("a9 : " + a9);
-
     }
 
     @Test
@@ -123,10 +130,7 @@ public class CronBuilderTest {
         System.out.println(CronBuilder.builder().dayOfMonth(1, 2).build());
 
         System.out.println(CronBuilder.builder().dayOfMonth(2, 4, true).build());
-
-
     }
-
 
 
 

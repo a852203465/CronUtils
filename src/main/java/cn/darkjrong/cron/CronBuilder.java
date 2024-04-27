@@ -61,8 +61,6 @@ import java.util.regex.Pattern;
 @SuppressWarnings("ALL")
 public class CronBuilder {
 
-    private CronBuilder() {}
-
     private static final String ZERO = "0";
     private static final String SPACE = " ";
     private static final String EMPTY = "";
@@ -76,656 +74,655 @@ public class CronBuilder {
     private static final String LASTWEEK = "LW";
     private static final String WEEK = "W";
 
-    private String seconds;
-    private String minutes;
-    private String hours;
-    private String dayofMonth;
-    private String month;
-    private String dayofWeek;
-    private String year;
+    private CronBuilder() {}
 
-    /**
-     * 构建器
-     * @return {@link CronBuilder}  构建器对象
-     */
-    public static CronBuilder builder() {
-        return new CronBuilder();
+    public static CronBuilder.Builder builder() {
+        return new CronBuilder.Builder();
     }
 
-    /**
-     * 记录Cron 表达式
-     */
-    private StringJoiner joiner = new StringJoiner(SPACE);
+    public static class Builder {
 
-    /**
-     * 返回Cron 表达式
-     * @return Cron 表达式
-     */
-    public String build() {
+        private String seconds;
+        private String minutes;
+        private String hours;
+        private String dayofMonth;
+        private String month;
+        private String dayofWeek;
+        private String year;
 
-        if (isBlank(this.seconds)) this.seconds =  ASTERISK;
-        if (isBlank(this.minutes)) this.minutes =  ASTERISK;
-        if (isBlank(this.hours)) this.hours =  ASTERISK;
-        if (isBlank(this.minutes)) this.minutes =  ASTERISK;
-        if (isBlank(this.dayofMonth)) this.dayofMonth =  ASTERISK;
-        if (isBlank(this.month)) this.month =  ASTERISK;
-        if (isBlank(this.dayofWeek)) this.dayofWeek =  ASTERISK;
-        if (isBlank(this.year)) this.year =  ASTERISK;
+        /**
+         * 记录Cron 表达式
+         */
+        private StringJoiner joiner = new StringJoiner(SPACE);
 
-        if (isNotBlank(this.dayofMonth) && isBlank(this.dayofWeek)) {
-            this.dayofWeek = QUESTION_MARK;
-        }else if (isNotBlank(this.dayofWeek) && isBlank(this.dayofMonth)) {
-            this.dayofMonth = QUESTION_MARK;
-        }else if (isNotBlank(this.dayofWeek) && isNotBlank(this.dayofMonth)) {
-            if (equals(QUESTION_MARK, this.dayofMonth) && equals(QUESTION_MARK, this.dayofWeek)) {
-                this.dayofWeek = QUESTION_MARK;
-            }
-            if (equals(ASTERISK, this.dayofMonth) && equals(ASTERISK, this.dayofWeek)) {
-                this.dayofWeek = QUESTION_MARK;
+        /**
+         * 每秒
+         * @return 返回当前对象
+         */
+        public Builder seconds() {
+            this.seconds = ASTERISK;
+            return this;
+        }
+
+        /**
+         * 指定秒
+         * @param seconds 秒，0~59的整数
+         * @return 返回当前对象
+         */
+        public Builder seconds(Integer... seconds) {
+            setTime(0, seconds);
+            StringJoiner stringJoiner = new StringJoiner(COMMA);
+            for (Integer second : seconds) {
+                if (second > 59)  second = 59;
+                if (second < 0)  second = 0;
+                stringJoiner.add(second + EMPTY);
             }
 
-            if (notEquals(QUESTION_MARK, this.dayofMonth) && notEquals(QUESTION_MARK, this.dayofWeek)) {
-                if (equals(ASTERISK, this.dayofMonth)
-                        && notEquals(QUESTION_MARK, this.dayofWeek) && notEquals(ASTERISK, this.dayofWeek)) {
-                    this.dayofMonth = QUESTION_MARK;
-                }else if (equals(ASTERISK, this.dayofWeek)
-                        && notEquals(QUESTION_MARK, this.dayofMonth) && notEquals(ASTERISK, this.dayofMonth)) {
-                    this.dayofWeek = QUESTION_MARK;
-                }else if (notEquals(QUESTION_MARK, this.dayofWeek)
-                        && notEquals(ASTERISK, this.dayofWeek) && isNumeric(this.dayofMonth)) {
-                    this.dayofMonth = QUESTION_MARK;
-                }else if (notEquals(QUESTION_MARK, this.dayofMonth)
-                        && notEquals(ASTERISK, this.dayofMonth) && isNumeric(this.dayofWeek)) {
-                    this.dayofWeek = QUESTION_MARK;
-                }else {
-                    this.dayofWeek = QUESTION_MARK;
-                }
+            this.seconds = stringJoiner.toString();
+            return this;
+        }
+
+        /**
+         * 指定秒 周期
+         * @param start 开始，0~59的整数
+         * @param endOrInterval  结束/间隔，0~59的整数
+         * @param isCycle  true: 是周期，false: 是间隔
+         * @return 返回当前对象
+         */
+        public Builder seconds(int start, int endOrInterval, boolean isCycle) {
+
+            String symbol;
+
+            if (isCycle) {
+                if (start > 58)  start = 58;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 59)  endOrInterval = 59;
+                if (endOrInterval < 2)  endOrInterval = 2;
+                symbol = DASHED;
+            }else {
+                if (start > 59)  start = 59;
+                if (start < 0)  start = 0;
+                if (endOrInterval > 59)  endOrInterval = 59;
+                if (endOrInterval < 1)  endOrInterval = 1;
+                symbol = SLASH;
             }
 
-        }else if (isBlank(this.dayofWeek) && isBlank(this.dayofMonth)) {
-            this.dayofWeek = QUESTION_MARK;
+            this.seconds = start + symbol + endOrInterval;
+            return this;
         }
 
-        joiner.add(seconds).add(minutes).add(hours).add(dayofMonth).add(month).add(dayofWeek).add(year);
+        /**
+         * 每分
+         * @return 返回当前对象
+         */
+        public Builder minutes() {
 
-        String cron = joiner.toString();
-
-        assert CronExpression.isValidExpression(cron);
-
-        joiner = null;
-        return cron;
-    }
-
-    /**
-     * 每秒
-     * @return 返回当前对象
-     */
-    public CronBuilder seconds() {
-        this.seconds = ASTERISK;
-        return this;
-    }
-
-    /**
-     * 指定秒
-     * @param seconds 秒，0~59的整数
-     * @return 返回当前对象
-     */
-    public CronBuilder seconds(Integer... seconds) {
-        setTime(0, seconds);
-        StringJoiner stringJoiner = new StringJoiner(COMMA);
-        for (Integer second : seconds) {
-            if (second > 59)  second = 59;
-            if (second < 0)  second = 0;
-            stringJoiner.add(second + EMPTY);
+            if (isBlank(this.seconds)) seconds(0);
+            this.minutes = ASTERISK;
+            return this;
         }
 
-        this.seconds = stringJoiner.toString();
-        return this;
-    }
+        /**
+         * 指定分
+         * @param minutesArr 分，0~59的整数
+         * @return 返回当前对象
+         */
+        public Builder minutes(Integer... minutesArr) {
+            setTime(0, minutesArr);
+            StringJoiner stringJoiner = new StringJoiner(COMMA);
+            for (Integer minutes : minutesArr) {
+                if (minutes > 59)  minutes = 59;
+                if (minutes < 0)  minutes = 0;
+                stringJoiner.add(minutes + EMPTY);
+            }
 
-    /**
-     * 指定秒 周期
-     * @param start 开始，0~59的整数
-     * @param endOrInterval  结束/间隔，0~59的整数
-     * @param isCycle  true: 是周期，false: 是间隔
-     * @return 返回当前对象
-     */
-    public CronBuilder seconds(int start, int endOrInterval, boolean isCycle) {
-
-        String symbol;
-
-        if (isCycle) {
-            if (start > 58)  start = 58;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 59)  endOrInterval = 59;
-            if (endOrInterval < 2)  endOrInterval = 2;
-            symbol = DASHED;
-        }else {
-            if (start > 59)  start = 59;
-            if (start < 0)  start = 0;
-            if (endOrInterval > 59)  endOrInterval = 59;
-            if (endOrInterval < 1)  endOrInterval = 1;
-            symbol = SLASH;
+            if (isBlank(this.seconds)) seconds(0);
+            this.minutes = stringJoiner.toString();
+            return this;
         }
 
-        this.seconds = start + symbol + endOrInterval;
-        return this;
-    }
+        /**
+         * 指定分 周期
+         * @param start 开始，0~59的整数
+         * @param endOrInterval  结束/间隔，0~59的整数
+         * @param isCycle  true: 是周期，false: 是间隔
+         * @return 返回当前对象
+         */
+        public Builder minutes(int start, int endOrInterval, boolean isCycle) {
 
-    /**
-     * 每分
-     * @return 返回当前对象
-     */
-    public CronBuilder minutes() {
+            String symbol;
 
-        if (isBlank(this.seconds)) seconds(0);
-        this.minutes = ASTERISK;
-        return this;
-    }
-
-    /**
-     * 指定分
-     * @param minutesArr 分，0~59的整数
-     * @return 返回当前对象
-     */
-    public CronBuilder minutes(Integer... minutesArr) {
-        setTime(0, minutesArr);
-        StringJoiner stringJoiner = new StringJoiner(COMMA);
-        for (Integer minutes : minutesArr) {
-            if (minutes > 59)  minutes = 59;
-            if (minutes < 0)  minutes = 0;
-            stringJoiner.add(minutes + EMPTY);
+            if (isCycle) {
+                if (start > 58)  start = 58;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 59)  endOrInterval = 59;
+                if (endOrInterval < 2)  endOrInterval = 2;
+                symbol = DASHED;
+            }else {
+                if (start > 59)  start = 59;
+                if (start < 0)  start = 0;
+                if (endOrInterval > 59)  endOrInterval = 59;
+                if (endOrInterval < 1)  endOrInterval = 1;
+                symbol = SLASH;
+            }
+            if (isBlank(this.seconds)) seconds(0);
+            this.minutes = start + symbol + endOrInterval;
+            return this;
         }
 
-        if (isBlank(this.seconds)) seconds(0);
-        this.minutes = stringJoiner.toString();
-        return this;
-    }
-
-    /**
-     * 指定分 周期
-     * @param start 开始，0~59的整数
-     * @param endOrInterval  结束/间隔，0~59的整数
-     * @param isCycle  true: 是周期，false: 是间隔
-     * @return 返回当前对象
-     */
-    public CronBuilder minutes(int start, int endOrInterval, boolean isCycle) {
-
-        String symbol;
-
-        if (isCycle) {
-            if (start > 58)  start = 58;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 59)  endOrInterval = 59;
-            if (endOrInterval < 2)  endOrInterval = 2;
-            symbol = DASHED;
-        }else {
-            if (start > 59)  start = 59;
-            if (start < 0)  start = 0;
-            if (endOrInterval > 59)  endOrInterval = 59;
-            if (endOrInterval < 1)  endOrInterval = 1;
-            symbol = SLASH;
-        }
-        if (isBlank(this.seconds)) seconds(0);
-        this.minutes = start + symbol + endOrInterval;
-        return this;
-    }
-
-    /**
-     * 每小时
-     * @return 返回当前对象
-     */
-    public CronBuilder hours() {
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        this.hours = ASTERISK;
-        return this;
-    }
-
-    /**
-     * 指定时
-     * @param hoursArr 分，0~23的整数
-     * @return 返回当前对象
-     */
-    public CronBuilder hours(Integer... hoursArr) {
-        setTime(0, hoursArr);
-        StringJoiner stringJoiner = new StringJoiner(COMMA);
-        for (Integer hours : hoursArr) {
-            if (hours > 23)  hours = 23;
-            if (hours < 0)  hours = 0;
-            stringJoiner.add(hours + EMPTY);
+        /**
+         * 每小时
+         * @return 返回当前对象
+         */
+        public Builder hours() {
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            this.hours = ASTERISK;
+            return this;
         }
 
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        this.hours = stringJoiner.toString();
-        return this;
-    }
+        /**
+         * 指定时
+         * @param hoursArr 分，0~23的整数
+         * @return 返回当前对象
+         */
+        public Builder hours(Integer... hoursArr) {
+            setTime(0, hoursArr);
+            StringJoiner stringJoiner = new StringJoiner(COMMA);
+            for (Integer hours : hoursArr) {
+                if (hours > 23)  hours = 23;
+                if (hours < 0)  hours = 0;
+                stringJoiner.add(hours + EMPTY);
+            }
 
-    /**
-     * 指定分 周期
-     * @param start 开始，0~23的整数
-     * @param endOrInterval  结束/间隔，0~23的整数
-     * @param isCycle  true: 是周期，false: 是间隔
-     * @return 返回当前对象
-     */
-    public CronBuilder hours(int start, int endOrInterval, boolean isCycle) {
-
-        String symbol;
-
-        if (isCycle) {
-            if (start > 23)  start = 23;
-            if (start < 0)  start = 0;
-            if (endOrInterval > 23)  endOrInterval = 23;
-            if (endOrInterval < 2)  endOrInterval = 2;
-            symbol = DASHED;
-        }else {
-            if (start > 23)  start = 23;
-            if (start < 0)  start = 0;
-            if (endOrInterval > 23)  endOrInterval = 23;
-            if (endOrInterval < 1)  endOrInterval = 1;
-            symbol = SLASH;
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            this.hours = stringJoiner.toString();
+            return this;
         }
 
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        this.minutes = start + symbol + endOrInterval;
-        return this;
-    }
+        /**
+         * 指定分 周期
+         * @param start 开始，0~23的整数
+         * @param endOrInterval  结束/间隔，0~23的整数
+         * @param isCycle  true: 是周期，false: 是间隔
+         * @return 返回当前对象
+         */
+        public Builder hours(int start, int endOrInterval, boolean isCycle) {
 
-    /**
-     * 每日
-     * @return 返回当前对象
-     */
-    public CronBuilder dayOfMonth() {
+            String symbol;
 
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
+            if (isCycle) {
+                if (start > 23)  start = 23;
+                if (start < 0)  start = 0;
+                if (endOrInterval > 23)  endOrInterval = 23;
+                if (endOrInterval < 2)  endOrInterval = 2;
+                symbol = DASHED;
+            }else {
+                if (start > 23)  start = 23;
+                if (start < 0)  start = 0;
+                if (endOrInterval > 23)  endOrInterval = 23;
+                if (endOrInterval < 1)  endOrInterval = 1;
+                symbol = SLASH;
+            }
 
-        this.dayofMonth = ASTERISK;
-        return this;
-    }
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            this.minutes = start + symbol + endOrInterval;
+            return this;
+        }
 
-    /**
-     * 指定日
-     * @param days 日，0~31的整数
-     * @return 返回当前对象
-     */
-    public CronBuilder dayOfMonth(Integer... days) {
-        setTime(1, days);
-        StringJoiner stringJoiner = new StringJoiner(COMMA);
-        for (Integer day : days) {
+        /**
+         * 每日
+         * @return 返回当前对象
+         */
+        public Builder dayOfMonth() {
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+
+            this.dayofMonth = ASTERISK;
+            return this;
+        }
+
+        /**
+         * 指定日
+         * @param days 日，0~31的整数
+         * @return 返回当前对象
+         */
+        public Builder dayOfMonth(Integer... days) {
+            setTime(1, days);
+            StringJoiner stringJoiner = new StringJoiner(COMMA);
+            for (Integer day : days) {
+                if (day > 31)  day = 31;
+                if (day < 1)  day = 1;
+                stringJoiner.add(day + EMPTY);
+            }
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            this.dayofMonth = stringJoiner.toString();
+            return this;
+        }
+
+        /**
+         * 指定天 周期
+         * @param start 开始，0~31的整数
+         * @param endOrInterval  结束/间隔，0~31的整数
+         * @param isCycle  true: 是周期，false: 是间隔
+         * @return 返回当前对象
+         */
+        public Builder dayOfMonth(int start, int endOrInterval, boolean isCycle) {
+
+            String symbol;
+
+            if (isCycle) {
+                if (start > 31)  start = 31;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 31)  endOrInterval = 31;
+                if (endOrInterval < 2)  endOrInterval = 2;
+                symbol = DASHED;
+            }else {
+                if (start > 31)  start = 31;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 31)  endOrInterval = 31;
+                if (endOrInterval < 1)  endOrInterval = 1;
+                symbol = SLASH;
+            }
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            this.dayofMonth = start + symbol + endOrInterval;
+            return this;
+        }
+
+        /**
+         * 月最后一日
+         *
+         * @return {@link CronBuilder} 返回当前对象
+         */
+        public Builder dayOfMonthLast() {
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            this.dayofMonth = LAST;
+            return this;
+        }
+
+        /**
+         * 月最后一个工作日
+         *
+         * @return {@link CronBuilder} 返回当前对象
+         */
+        public Builder dayOfMonthLastWeek() {
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            this.dayofMonth = LASTWEEK;
+            return this;
+        }
+
+        /**
+         * 每月指定时间最近的那个工作日
+         *
+         * @return {@link CronBuilder} 返回当前对象
+         */
+        public Builder dayOfMonthWeek(int day) {
+
             if (day > 31)  day = 31;
             if (day < 1)  day = 1;
-            stringJoiner.add(day + EMPTY);
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            this.dayofMonth = day + WEEK;
+            return this;
         }
 
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        this.dayofMonth = stringJoiner.toString();
-        return this;
-    }
-
-    /**
-     * 指定天 周期
-     * @param start 开始，0~31的整数
-     * @param endOrInterval  结束/间隔，0~31的整数
-     * @param isCycle  true: 是周期，false: 是间隔
-     * @return 返回当前对象
-     */
-    public CronBuilder dayOfMonth(int start, int endOrInterval, boolean isCycle) {
-
-        String symbol;
-
-        if (isCycle) {
-            if (start > 31)  start = 31;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 31)  endOrInterval = 31;
-            if (endOrInterval < 2)  endOrInterval = 2;
-            symbol = DASHED;
-        }else {
-            if (start > 31)  start = 31;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 31)  endOrInterval = 31;
-            if (endOrInterval < 1)  endOrInterval = 1;
-            symbol = SLASH;
-        }
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        this.dayofMonth = start + symbol + endOrInterval;
-        return this;
-    }
-
-    /**
-     * 月最后一日
-     *
-     * @return {@link CronBuilder} 返回当前对象
-     */
-    public CronBuilder dayOfMonthLast() {
-
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        this.dayofMonth = LAST;
-        return this;
-    }
-
-    /**
-     * 月最后一个工作日
-     *
-     * @return {@link CronBuilder} 返回当前对象
-     */
-    public CronBuilder dayOfMonthLastWeek() {
-
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        this.dayofMonth = LASTWEEK;
-        return this;
-    }
-
-    /**
-     * 每月指定时间最近的那个工作日
-     *
-     * @return {@link CronBuilder} 返回当前对象
-     */
-    public CronBuilder dayOfMonthWeek(int day) {
-
-        if (day > 31)  day = 31;
-        if (day < 1)  day = 1;
-
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        this.dayofMonth = day + WEEK;
-        return this;
-    }
-
-    /**
-     * 每月
-     * @return 返回当前对象
-     */
-    public CronBuilder month() {
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.dayofMonth)) dayOfMonth(1);
-        this.month = ASTERISK;
-        return this;
-    }
-
-    /**
-     * 指定月
-     * @param months 月，1~12的整数
-     * @return 返回当前对象
-     */
-    public CronBuilder month(Integer... months) {
-        setTime(1, months);
-        StringJoiner stringJoiner = new StringJoiner(COMMA);
-        for (Integer month : months) {
-            if (month > 12)  month = 12;
-            if (month < 1)  month = 1;
-            stringJoiner.add(month + EMPTY);
+        /**
+         * 每月
+         * @return 返回当前对象
+         */
+        public Builder month() {
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.dayofMonth)) dayOfMonth(1);
+            this.month = ASTERISK;
+            return this;
         }
 
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.dayofMonth)) dayOfMonth(1);
-        this.month = stringJoiner.toString();
-        return this;
-    }
+        /**
+         * 指定月
+         * @param months 月，1~12的整数
+         * @return 返回当前对象
+         */
+        public Builder month(Integer... months) {
+            setTime(1, months);
+            StringJoiner stringJoiner = new StringJoiner(COMMA);
+            for (Integer month : months) {
+                if (month > 12)  month = 12;
+                if (month < 1)  month = 1;
+                stringJoiner.add(month + EMPTY);
+            }
 
-    /**
-     * 指定月周期
-     * @param start 开始，0~12的整数
-     * @param endOrInterval  结束/间隔，0~12的整数
-     * @param isCycle  true: 是周期，false: 是间隔
-     * @return 返回当前对象
-     */
-    public CronBuilder month(int start, int endOrInterval, boolean isCycle) {
-
-        String symbol;
-
-        if (isCycle) {
-            if (start > 12)  start = 12;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 12)  endOrInterval = 12;
-            if (endOrInterval < 2)  endOrInterval = 2;
-            symbol = DASHED;
-        }else {
-            if (start > 12)  start = 12;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 12)  endOrInterval = 12;
-            if (endOrInterval < 1)  endOrInterval = 1;
-            symbol = SLASH;
-        }
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.dayofMonth)) dayOfMonth(1);
-        this.month = start + symbol + endOrInterval;
-        return this;
-    }
-
-    /**
-     * 每周
-     * @return 返回当前对象
-     */
-    public CronBuilder dayOfWeek() {
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.month)) month(1);
-        this.dayofWeek  = ASTERISK;
-        return this;
-    }
-
-    /**
-     * 指定周
-     * @param dayOfWeeks 周，1~7的整数
-     * @return 返回当前对象
-     */
-    public CronBuilder dayOfWeek(Integer... dayOfWeeks) {
-        setTime(1, dayOfWeeks);
-        StringJoiner stringJoiner = new StringJoiner(COMMA);
-        for (Integer dayOfWeek : dayOfWeeks) {
-            if (dayOfWeek > 7)  dayOfWeek = 7;
-            if (dayOfWeek < 1)  dayOfWeek = 1;
-            stringJoiner.add(dayOfWeek + EMPTY);
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.dayofMonth)) dayOfMonth(1);
+            this.month = stringJoiner.toString();
+            return this;
         }
 
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.month)) month(1);
-        this.dayofWeek = stringJoiner.toString();
-        return this;
-    }
+        /**
+         * 指定月周期
+         * @param start 开始，0~12的整数
+         * @param endOrInterval  结束/间隔，0~12的整数
+         * @param isCycle  true: 是周期，false: 是间隔
+         * @return 返回当前对象
+         */
+        public Builder month(int start, int endOrInterval, boolean isCycle) {
 
-    /**
-     * 指定周 周期
-     * @param start 开始，1-7, 1-4
-     * @param endOrInterval  结束/间隔，1-5
-     * @param isCycle  true: 是周期，false: 是间隔
-     * @return 返回当前对象
-     */
-    public CronBuilder dayOfWeek(int start, int endOrInterval, boolean isCycle) {
+            String symbol;
 
-        String symbol;
-
-        if (isCycle) {
-            if (start > 7)  start = 7;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 7)  endOrInterval = 7;
-            if (endOrInterval < 2)  endOrInterval = 2;
-            symbol = DASHED;
-        }else {
-            if (start > 4)  start = 4;
-            if (start < 1)  start = 1;
-            if (endOrInterval > 5)  endOrInterval = 5;
-            if (endOrInterval < 1)  endOrInterval = 1;
-            symbol = WELL_NO;
+            if (isCycle) {
+                if (start > 12)  start = 12;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 12)  endOrInterval = 12;
+                if (endOrInterval < 2)  endOrInterval = 2;
+                symbol = DASHED;
+            }else {
+                if (start > 12)  start = 12;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 12)  endOrInterval = 12;
+                if (endOrInterval < 1)  endOrInterval = 1;
+                symbol = SLASH;
+            }
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.dayofMonth)) dayOfMonth(1);
+            this.month = start + symbol + endOrInterval;
+            return this;
         }
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.month)) month(1);
-        this.dayofWeek = start + symbol + endOrInterval;
-        return this;
-    }
 
-
-    /**
-     * 本月的最后一个星期几
-     *
-     * @return {@link CronBuilder}  返回当前对象
-     */
-    public CronBuilder dayOfWeekLast(int week) {
-
-        if (week > 7)  week = 7;
-        if (week < 1)  week = 1;
-
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.month)) month(1);
-        this.dayofWeek = week + LAST;
-        return this;
-    }
-
-    /**
-     * 每年
-     * @return 返回当前对象
-     */
-    public CronBuilder year() {
-
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.month)) month(1);
-        if (isBlank(this.dayofMonth)) dayOfMonth(1);
-
-        this.year = ASTERISK;
-        return this;
-    }
-
-    /**
-     * 指定年
-     * @param year 年
-     * @return 返回当前对象
-     */
-    public CronBuilder year(int year) {
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.month)) month(1);
-        if (isBlank(this.dayofMonth)) dayOfMonth(1);
-
-        this.year = year < getCurrentYear() ? ASTERISK : year + EMPTY;
-        return this;
-    }
-
-
-    /**
-     * 指定年 周期
-     * @param start 开始  1970~2099
-     * @param end  结束  1970~2099
-     * @return 返回当前对象
-     */
-    public CronBuilder year(int start, int end) {
-
-        if (start > end) start = end;
-        if (start < getCurrentYear()) start = getCurrentYear();
-        if (end < getCurrentYear()) end = getCurrentYear();
-
-        if (isBlank(this.seconds)) seconds(0);
-        if (isBlank(this.minutes)) minutes(0);
-        if (isBlank(this.hours)) hours(0);
-        if (isBlank(this.month)) month(1);
-        if (isBlank(this.dayofMonth)) dayOfMonth(1);
-        this.year = start + DASHED + end;
-        return this;
-    }
-
-    /**
-     * 字符串不是空
-     * @param str 字符串
-     * @return boolean true/false
-     */
-    private static boolean isNotBlank(String str) {
-        return null != str && !SPACE.equals(str) && !EMPTY.equals(str);
-    }
-
-    /**
-     * 字符串是空
-     * @param str 字符串
-     * @return boolean true/false
-     */
-    private static boolean isBlank(String str) {
-        return null == str || SPACE.equals(str) || EMPTY.equals(str);
-    }
-
-    /**
-     *  是否相等
-     *
-     * @param obj1 对象
-     * @param obj2 对象
-     * @return boolean
-     */
-    private static boolean equals(Object obj1, Object obj2) {
-        return obj1.equals(obj2);
-    }
-
-    /**
-     *  是否不相等
-     *
-     * @param obj1 对象
-     * @param obj2 对象
-     * @return boolean
-     */
-    private static boolean notEquals(Object obj1, Object obj2) {
-        return !obj1.equals(obj2);
-    }
-
-    /**
-     * 设置时间
-     * @param index0Value 索引0位置的值
-     * @param time 时间
-     */
-    private static void setTime(Integer index0Value, Integer... time) {
-        if (time == null || time.length <= 0) {
-            time = new Integer[1];
-            time[0] = index0Value;
+        /**
+         * 每周
+         * @return 返回当前对象
+         */
+        public Builder dayOfWeek() {
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.month)) month(1);
+            this.dayofWeek  = ASTERISK;
+            return this;
         }
+
+        /**
+         * 指定周
+         * @param dayOfWeeks 周，1~7的整数
+         * @return 返回当前对象
+         */
+        public Builder dayOfWeek(Integer... dayOfWeeks) {
+            setTime(1, dayOfWeeks);
+            StringJoiner stringJoiner = new StringJoiner(COMMA);
+            for (Integer dayOfWeek : dayOfWeeks) {
+                if (dayOfWeek > 7)  dayOfWeek = 7;
+                if (dayOfWeek < 1)  dayOfWeek = 1;
+                stringJoiner.add(dayOfWeek + EMPTY);
+            }
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.month)) month(1);
+            this.dayofWeek = stringJoiner.toString();
+            return this;
+        }
+
+        /**
+         * 指定周 周期
+         * @param start 开始，1-7, 1-4
+         * @param endOrInterval  结束/间隔，1-5
+         * @param isCycle  true: 是周期，false: 是间隔
+         * @return 返回当前对象
+         */
+        public Builder dayOfWeek(int start, int endOrInterval, boolean isCycle) {
+
+            String symbol;
+
+            if (isCycle) {
+                if (start > 7)  start = 7;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 7)  endOrInterval = 7;
+                if (endOrInterval < 2)  endOrInterval = 2;
+                symbol = DASHED;
+            }else {
+                if (start > 4)  start = 4;
+                if (start < 1)  start = 1;
+                if (endOrInterval > 5)  endOrInterval = 5;
+                if (endOrInterval < 1)  endOrInterval = 1;
+                symbol = WELL_NO;
+            }
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.month)) month(1);
+            this.dayofWeek = start + symbol + endOrInterval;
+            return this;
+        }
+
+
+        /**
+         * 本月的最后一个星期几
+         *
+         * @return {@link CronBuilder}  返回当前对象
+         */
+        public Builder dayOfWeekLast(int week) {
+
+            if (week > 7)  week = 7;
+            if (week < 1)  week = 1;
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.month)) month(1);
+            this.dayofWeek = week + LAST;
+            return this;
+        }
+
+        /**
+         * 每年
+         * @return 返回当前对象
+         */
+        public Builder year() {
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.month)) month(1);
+            if (isBlank(this.dayofMonth)) dayOfMonth(1);
+
+            this.year = ASTERISK;
+            return this;
+        }
+
+        /**
+         * 指定年
+         * @param year 年
+         * @return 返回当前对象
+         */
+        public Builder year(int year) {
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.month)) month(1);
+            if (isBlank(this.dayofMonth)) dayOfMonth(1);
+
+            this.year = year < getCurrentYear() ? ASTERISK : year + EMPTY;
+            return this;
+        }
+
+
+        /**
+         * 指定年 周期
+         * @param start 开始  1970~2099
+         * @param end  结束  1970~2099
+         * @return 返回当前对象
+         */
+        public Builder year(int start, int end) {
+
+            if (start > end) start = end;
+            if (start < getCurrentYear()) start = getCurrentYear();
+            if (end < getCurrentYear()) end = getCurrentYear();
+
+            if (isBlank(this.seconds)) seconds(0);
+            if (isBlank(this.minutes)) minutes(0);
+            if (isBlank(this.hours)) hours(0);
+            if (isBlank(this.month)) month(1);
+            if (isBlank(this.dayofMonth)) dayOfMonth(1);
+            this.year = start + DASHED + end;
+            return this;
+        }
+
+        /**
+         * 返回Cron 表达式
+         * @return Cron 表达式
+         */
+        public String build() {
+
+            if (isBlank(this.seconds)) this.seconds =  ASTERISK;
+            if (isBlank(this.minutes)) this.minutes =  ASTERISK;
+            if (isBlank(this.hours)) this.hours =  ASTERISK;
+            if (isBlank(this.minutes)) this.minutes =  ASTERISK;
+            if (isBlank(this.dayofMonth)) this.dayofMonth =  ASTERISK;
+            if (isBlank(this.month)) this.month =  ASTERISK;
+            if (isBlank(this.dayofWeek)) this.dayofWeek =  ASTERISK;
+            if (isBlank(this.year)) this.year =  ASTERISK;
+
+            if (isNotBlank(this.dayofMonth) && isBlank(this.dayofWeek)) {
+                this.dayofWeek = QUESTION_MARK;
+            }else if (isNotBlank(this.dayofWeek) && isBlank(this.dayofMonth)) {
+                this.dayofMonth = QUESTION_MARK;
+            }else if (isNotBlank(this.dayofWeek) && isNotBlank(this.dayofMonth)) {
+                if (equals(QUESTION_MARK, this.dayofMonth) && equals(QUESTION_MARK, this.dayofWeek)) {
+                    this.dayofWeek = QUESTION_MARK;
+                }
+                if (equals(ASTERISK, this.dayofMonth) && equals(ASTERISK, this.dayofWeek)) {
+                    this.dayofWeek = QUESTION_MARK;
+                }
+
+                if (notEquals(QUESTION_MARK, this.dayofMonth) && notEquals(QUESTION_MARK, this.dayofWeek)) {
+                    if (equals(ASTERISK, this.dayofMonth)
+                            && notEquals(QUESTION_MARK, this.dayofWeek) && notEquals(ASTERISK, this.dayofWeek)) {
+                        this.dayofMonth = QUESTION_MARK;
+                    }else if (equals(ASTERISK, this.dayofWeek)
+                            && notEquals(QUESTION_MARK, this.dayofMonth) && notEquals(ASTERISK, this.dayofMonth)) {
+                        this.dayofWeek = QUESTION_MARK;
+                    }else if (notEquals(QUESTION_MARK, this.dayofWeek)
+                            && notEquals(ASTERISK, this.dayofWeek) && isNumeric(this.dayofMonth)) {
+                        this.dayofMonth = QUESTION_MARK;
+                    }else if (notEquals(QUESTION_MARK, this.dayofMonth)
+                            && notEquals(ASTERISK, this.dayofMonth) && isNumeric(this.dayofWeek)) {
+                        this.dayofWeek = QUESTION_MARK;
+                    }else {
+                        this.dayofWeek = QUESTION_MARK;
+                    }
+                }
+
+            }else if (isBlank(this.dayofWeek) && isBlank(this.dayofMonth)) {
+                this.dayofWeek = QUESTION_MARK;
+            }
+
+            joiner.add(seconds).add(minutes).add(hours).add(dayofMonth).add(month).add(dayofWeek).add(year);
+
+            String cron = joiner.toString();
+
+            assert CronExpression.isValidExpression(cron);
+
+            joiner = null;
+            return cron;
+        }
+
+        /**
+         * 字符串不是空
+         * @param str 字符串
+         * @return boolean true/false
+         */
+        private static boolean isNotBlank(String str) {
+            return null != str && !SPACE.equals(str) && !EMPTY.equals(str);
+        }
+
+        /**
+         * 字符串是空
+         * @param str 字符串
+         * @return boolean true/false
+         */
+        private static boolean isBlank(String str) {
+            return null == str || SPACE.equals(str) || EMPTY.equals(str);
+        }
+
+        /**
+         *  是否相等
+         *
+         * @param obj1 对象
+         * @param obj2 对象
+         * @return boolean
+         */
+        private static boolean equals(Object obj1, Object obj2) {
+            return obj1.equals(obj2);
+        }
+
+        /**
+         *  是否不相等
+         *
+         * @param obj1 对象
+         * @param obj2 对象
+         * @return boolean
+         */
+        private static boolean notEquals(Object obj1, Object obj2) {
+            return !obj1.equals(obj2);
+        }
+
+        /**
+         * 设置时间
+         * @param index0Value 索引0位置的值
+         * @param time 时间
+         */
+        private static void setTime(Integer index0Value, Integer... time) {
+            if (time == null || time.length <= 0) {
+                time = new Integer[1];
+                time[0] = index0Value;
+            }
+        }
+
+        /**
+         * 获取当前年
+         * @return  当前年份
+         */
+        private static int getCurrentYear() {
+            Calendar cal = Calendar.getInstance();
+            return cal.get(Calendar.YEAR);
+        }
+
+        /**
+         * 是数字
+         *
+         * @param str str
+         * @return boolean
+         */
+        private static boolean isNumeric(String str){
+            Pattern pattern = Pattern.compile("[0-9]*");
+            Matcher isNum = pattern.matcher(str);
+            return !isNum.matches() ? Boolean.FALSE : Boolean.TRUE;
+        }
+
     }
-
-    /**
-     * 获取当前年
-     * @return  当前年份
-     */
-    private static int getCurrentYear() {
-        Calendar cal = Calendar.getInstance();
-        return cal.get(Calendar.YEAR);
-    }
-
-    /**
-     * 是数字
-     *
-     * @param str str
-     * @return boolean
-     */
-    private static boolean isNumeric(String str){
-        Pattern pattern = Pattern.compile("[0-9]*");
-        Matcher isNum = pattern.matcher(str);
-        return !isNum.matches() ? Boolean.FALSE : Boolean.TRUE;
-    }
-
-
-
 
 
 }
