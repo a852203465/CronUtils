@@ -1,6 +1,6 @@
 # CRON表达式组装
  
-## 1. 说明
+## 1.说明
  
  ```text
 Cron表达式是一个字符串，字符串以5或6个空格隔开，分为6或7个域，每一个域代表一个含义，
@@ -56,9 +56,10 @@ Cron有如下两种语法格式：
             注意：在使用“L”参数时，不要指定列表或范围，因为这会导致问题
 ```
  
-## 2. 使用, 详细使用查看测试类及注释
+## 2.使用方式
+### 2.1 CRON表达式生成
+ - 详细使用查看测试类及注释
  ```java
-
     String a4 = CronBuilder.builder().dayOfMonth(20, 5,true)
                 .month(4,12,false).seconds(40,43, true).build();
         System.out.println(a4);
@@ -71,9 +72,22 @@ Cron有如下两种语法格式：
         System.out.println(a5);
 
         System.out.println("-------------------------------------------------------");
-
 ```
  
- 
+### 2.2 CRON表达式获取运行时间
+ - 使用'CronTime'类
+```java
+ @Test
+    void nextTime2() {
+        String cron = CronBuilder.builder().hours(2).dayOfMonth(1).build();
+        System.out.println(cron);
+        System.out.println(CronTime.nextTime(cron));
+    }
+```
+
+
+
+
+
 
 
